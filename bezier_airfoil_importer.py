@@ -89,8 +89,8 @@ class Foil:
         
 
         dlg = ui.createFileDialog()
-        dlg.title = 'Open DAT File'
-        dlg.filter = 'Airfoil DAT files (*.dat);;All Files (*.*)'
+        dlg.title = 'Open bez File'
+        dlg.filter = 'Airfoil bez-files (*.bez);;All Files (*.*)'
         if dlg.showOpen() != adsk.core.DialogResults.DialogOK :
             return
         
