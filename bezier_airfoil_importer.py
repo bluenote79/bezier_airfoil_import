@@ -99,29 +99,35 @@ class Foil:
         line_sehne = sel0.entity
         line_oben = sel1.entity
 
-        try:
-            if line_sehne.startSketchPoint == line_oben.startSketchPoint:
-                    start = line_sehne.startSketchPoint
-                    ende = line_sehne.endSketchPoint
-                    start2 = line_oben.startSketchPoint
-                    ende2 = line_oben.endSketchPoint
-            elif line_sehne.startSketchPoint == line_oben.endSketchPoint:
-                    start = line_sehne.startSketchPoint
-                    ende = line_sehne.endSketchPoint
-                    start2 = line_oben.endSketchPoint
-                    ende2 = line_oben.startSketchPoint
-            elif line_sehne.endSketchPoint == line_oben.endSketchPoint:
-                    start = line_sehne.endSketchPoint
-                    ende = line_sehne.startSketchPoint
-                    start2 = line_oben.endSketchPoint
-                    ende2 = line_oben.startSketchPoint
-            elif line_sehne.endSketchPoint == line_oben.startSketchPoint:
-                    start = line_sehne.endSketchPoint
-                    ende = line_sehne.startSketchPoint
-                    start2 = line_oben.startSketchPoint
-                    ende2 = line_oben.endSketchPoint
-        except:
-            ui.messageBox("Die ausgewählten Linien sind nicht coinzident in einem Endpunkt!")
+        ss = app.measureManager.measureMinimumDistance(line_sehne.startSketchPoint, line_oben.startSketchPoint).value
+        se = app.measureManager.measureMinimumDistance(line_sehne.startSketchPoint, line_oben.endSketchPoint).value
+        ee = app.measureManager.measureMinimumDistance(line_sehne.endSketchPoint, line_oben.endSketchPoint).value
+        es = app.measureManager.measureMinimumDistance(line_sehne.endSketchPoint, line_oben.startSketchPoint).value
+
+        distances = [ss, se, ee, es]
+        m_dist = min(distances)
+
+        
+        if line_sehne.startSketchPoint == line_oben.startSketchPoint or ss == m_dist:
+                start = line_sehne.startSketchPoint
+                ende = line_sehne.endSketchPoint
+                start2 = line_oben.startSketchPoint
+                ende2 = line_oben.endSketchPoint
+        elif line_sehne.startSketchPoint == line_oben.endSketchPoint or se == m_dist:
+                start = line_sehne.startSketchPoint
+                ende = line_sehne.endSketchPoint
+                start2 = line_oben.endSketchPoint
+                ende2 = line_oben.startSketchPoint
+        elif line_sehne.endSketchPoint == line_oben.endSketchPoint or ee == m_dist:
+                start = line_sehne.endSketchPoint
+                ende = line_sehne.startSketchPoint
+                start2 = line_oben.endSketchPoint
+                ende2 = line_oben.startSketchPoint
+        elif line_sehne.endSketchPoint == line_oben.startSketchPoint or es == m_dist:
+                start = line_sehne.endSketchPoint
+                ende = line_sehne.startSketchPoint
+                start2 = line_oben.startSketchPoint
+                ende2 = line_oben.endSketchPoint
         
         wurzeltiefe = line_sehne.length
 
