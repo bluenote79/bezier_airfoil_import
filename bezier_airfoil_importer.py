@@ -8,6 +8,7 @@ Author bluenote79
 
 import adsk.core, adsk.fusion, adsk.cam, traceback
 import re
+import os
 
 COMMAND_ID = "Airfoil"
 SE01_SELECTION1_COMMAND_ID = "rootline"
