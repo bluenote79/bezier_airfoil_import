@@ -224,10 +224,12 @@ class Foil:
         controlPoints, knots = draw_spline(bezoben)
         controlPoints2, knots2 = draw_spline(bezunten)
 
-        nurbsCurve = adsk.core.NurbsCurve3D.createNonRational(controlPoints, 3, knots, False)
+        #nurbsCurve = adsk.core.NurbsCurve3D.createNonRational(controlPoints, 3, knots, False)
         #sketchCurves.sketchFixedSplines.addByNurbsCurve(nurbsCurve)
-        nurbsCurve2 = adsk.core.NurbsCurve3D.createNonRational(controlPoints2, 3, knots2, False)
+        #nurbsCurve2 = adsk.core.NurbsCurve3D.createNonRational(controlPoints2, 3, knots2, False)
         #sketchCurves.sketchFixedSplines.addByNurbsCurve(nurbsCurve2)
+        curve = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints, int(spline_degree))
+        curve2 = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints2, int(spline_degree))
        
         lines = sketchTest.sketchCurves.sketchLines
         
