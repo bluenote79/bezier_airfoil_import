@@ -14,6 +14,7 @@ COMMAND_ID = "Airfoil"
 SE01_SELECTION1_COMMAND_ID = "rootline"
 SE02_SELECTION2_COMMAND_ID = "perpendicular line"
 IN01_INPUT1_COMMAND_ID = "tail gap"
+IN02_INPUT2_COMMAND_ID = "degree"
 
 
 _handlers = []
@@ -42,10 +43,11 @@ class FoilCommandExecuteHandler(adsk.core.CommandEventHandler):
             input2 = inputs[1]
             sel1 = input2.selection(0)
             input3 = inputs[2]
+            input4 = inputs[3]
           
 
             foil = Foil()
-            foil.Execute(sel0, sel1, input3.value);
+            foil.Execute(sel0, sel1, input3.value, input4.value);
         except:
             if ui:
                 ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
@@ -63,7 +65,7 @@ class FoilCommandDestroyHandler(adsk.core.CommandEventHandler):
 
 
 class Foil:
-    def Execute(self, sel0, sel1, endleiste_soll):
+    def Execute(self, sel0, sel1, endleiste_soll, spline_degree):
 
         def get_profile(filename):
             with open(filename, encoding="utf-8") as a:
@@ -260,6 +262,7 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i3 = inputs.addValueInput(IN01_INPUT1_COMMAND_ID, "Endleiste Dicke", "mm", adsk.core.ValueInput.createByReal(0.0))
+            i4 = inputs.addValueInput(IN02_INPUT2_COMMAND_ID, "degree", "", adsk.core.ValueInput.createByReal(3))
 
         except:
             if ui:
