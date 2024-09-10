@@ -15,9 +15,15 @@ SE01_SELECTION1_COMMAND_ID = "rootline"
 SE02_SELECTION2_COMMAND_ID = "perpendicular line"
 IN01_INPUT1_COMMAND_ID = "tail gap"
 IN02_INPUT2_COMMAND_ID = "degree"
+RB01_CHOICE1_COMMAND_ID = "degree"
 
+global spline_degree
+
+spline_degree = 5
 
 _handlers = []
+
+
 ui = None
 app = adsk.core.Application.get()
 if app:
@@ -47,7 +53,7 @@ class FoilCommandExecuteHandler(adsk.core.CommandEventHandler):
           
 
             foil = Foil()
-            foil.Execute(sel0, sel1, input3.value, input4.value);
+            foil.Execute(sel0, sel1, input3.value, input4);
         except:
             if ui:
                 ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
@@ -65,7 +71,7 @@ class FoilCommandDestroyHandler(adsk.core.CommandEventHandler):
 
 
 class Foil:
-    def Execute(self, sel0, sel1, endleiste_soll, spline_degree):
+    def Execute(self, sel0, sel1, endleiste_soll, input4):
 
         def get_profile(filename):
             with open(filename, encoding="utf-8") as a:
@@ -202,14 +208,7 @@ class Foil:
 
         sketchCurves = sketchTest.sketchCurves
         
-        def draw_spline(points):
-
-            knots = [0, 0, 0, 0]
-
-            for i in range(1, len(points) -3):
-                knots.append(i)
-            
-            knots = [*knots, knots[-1] + 1, knots[-1] + 1, knots[-1] + 1, knots[-1] + 1]
+        def draw_control_points(points):
 
             # Create the arrays for the nurbs
             controlPoints=[]
@@ -221,17 +220,17 @@ class Foil:
                 controlPoints.append(point)
                 sketchTest.sketchPoints.add(point)    # optional - show our control points in the sketch
 
-            return controlPoints, knots
+            return controlPoints
        
-        controlPoints, knots = draw_spline(bezoben)
-        controlPoints2, knots2 = draw_spline(bezunten)
+        controlPoints = draw_control_points(bezoben)
+        controlPoints2 = draw_control_points(bezunten)
 
-        #nurbsCurve = adsk.core.NurbsCurve3D.createNonRational(controlPoints, 3, knots, False)
-        #sketchCurves.sketchFixedSplines.addByNurbsCurve(nurbsCurve)
-        #nurbsCurve2 = adsk.core.NurbsCurve3D.createNonRational(controlPoints2, 3, knots2, False)
-        #sketchCurves.sketchFixedSplines.addByNurbsCurve(nurbsCurve2)
+        #ui.messageBox(str(spline_degree))
+
         curve = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints, int(spline_degree))
+        curve.isFixed = True
         curve2 = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints2, int(spline_degree))
+        curve2.isFixed = True
        
         lines = sketchTest.sketchCurves.sketchLines
         
@@ -245,6 +244,7 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def notify(self, args: adsk.core.CommandEventArgs):
         try:
 
+            
             onExecute = FoilCommandExecuteHandler()
             args.command.execute.add(onExecute)
             _handlers.append(onExecute)
@@ -252,6 +252,10 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             onDestroy = FoilCommandDestroyHandler()
             args.command.destroy.add(onDestroy)
             _handlers.append(onDestroy)
+
+            onInput = CommandSelInputChanged()
+            args.command.inputChanged.add(onInput)
+            _handlers.append(onInput)
 
             inputs = args.command.commandInputs
       
@@ -262,11 +266,48 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i3 = inputs.addValueInput(IN01_INPUT1_COMMAND_ID, "Endleiste Dicke", "mm", adsk.core.ValueInput.createByReal(0.0))
-            i4 = inputs.addValueInput(IN02_INPUT2_COMMAND_ID, "degree", "", adsk.core.ValueInput.createByReal(3))
+
+            
+            i4: adsk.core.DropDownCommandInput = \
+                inputs.addDropDownCommandInput(RB01_CHOICE1_COMMAND_ID, RB01_CHOICE1_COMMAND_ID, adsk.core.DropDownStyles.LabeledIconDropDownStyle)
+           
+            i4.listItems.add("3", False)
+            i4.listItems.add("4", False)
+            i4.listItems.add("5", True)
+            i4.listItems.add("6", False)
+            i4.listItems.add("7", False)
+            i4.listItems.add("8", False)
+            i4.listItems.add("9", False)
+
+
 
         except:
             if ui:
                 ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+
+
+
+class CommandSelInputChanged(adsk.core.InputChangedEventHandler):
+    def __init__(self):
+        super().__init__()
+    def notify(self, args: adsk.core.InputChangedEventArgs):
+        try:
+            
+             
+            if args.input.id == RB01_CHOICE1_COMMAND_ID:
+                
+                #ui.messageBox(args.input.selectedItem.name)
+
+                global spline_degree
+                spline_degree = int(args.input.selectedItem.name)
+              
+            else:
+                pass
+
+
+        except:
+            app.log('Failed:\n{}'.format(traceback.format_exc()))
+
 
 
 def run(context):
@@ -292,4 +333,3 @@ def run(context):
     except:
         if ui:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
-
