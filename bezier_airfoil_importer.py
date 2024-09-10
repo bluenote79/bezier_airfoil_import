@@ -159,6 +159,8 @@ class Foil:
         midlinerotationMatrix.setToRotateTo(midline, midlineto, z_axe)
 
         sketchTest = line_sehne.parentSketch
+        datei = os.path.basename(filename)
+        sketchTest.name=f'{datei}_{round(endleiste_soll * 10, 2)}_mm tail_gap'
         
         pointplus  = adsk.core.Point3D.create(1, 1, 0)
         pointminus  = adsk.core.Point3D.create(1, -1, 0)
