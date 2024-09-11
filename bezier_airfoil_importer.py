@@ -73,10 +73,14 @@ class FoilCommandDestroyHandler(adsk.core.CommandEventHandler):
 class Foil:
     def Execute(self, sel0, sel1, endleiste_soll, input4):
 
+        global spline_degree
+
+              
         def get_profile(filename):
             with open(filename, encoding="utf-8") as a:
                 text = a.read()
 
+            global spline_degree
             # Koordinaten auslesen und zusammenfügen als Tupel
             muster = r"-?\d+\.\d{3,}"
 
@@ -93,6 +97,14 @@ class Foil:
 
             oben = [[float(koordinaten[i][0]), float(koordinaten[i][1]), 0.0] for i in range(0, int(0.5 * (len(koordinaten) +1)))]
             unten = [[float(koordinaten[i][0]), float(koordinaten[i][1]), 0.0] for i in range(int(0.5 * (len(koordinaten) -1)), len(koordinaten))]
+
+            if len(oben) == len(unten) and len(oben) == spline_degree + 1:
+                pass
+            elif len(oben) != len(unten):
+                ui.messageBox(f'Different degrees found in top and bottom curves. Not supportet yet!')
+            else:
+                ui.messageBox(f'Splinedegree {spline_degree} does not match the input File ({len(oben)} points). Splinedegree will be changed to {len(oben) -1}')
+                spline_degree = len(oben) -1 
 
             return oben, unten
         
@@ -186,6 +198,7 @@ class Foil:
         
         bezoben, bezunten = get_profile(filename)
 
+
         def tail_gap(oben, unten, endleiste_soll):
             
             half = (endleiste_soll * 0.5) / wurzeltiefe
@@ -217,20 +230,33 @@ class Foil:
                 point.transformBy(scaleMatrix)
                 point.transformBy(midlinerotationMatrix)
                 point.transformBy(transform)
+                point.isfixed = True
                 controlPoints.append(point)
                 sketchTest.sketchPoints.add(point)    # optional - show our control points in the sketch
 
             return controlPoints
        
+
+             
         controlPoints = draw_control_points(bezoben)
         controlPoints2 = draw_control_points(bezunten)
 
-        #ui.messageBox(str(spline_degree))
 
-        curve = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints, int(spline_degree))
-        curve.isFixed = True
-        curve2 = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints2, int(spline_degree))
-        curve2.isFixed = True
+        global spline_degree
+
+        if spline_degree == 5 or spline_degree == 3:
+            curve = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints, int(spline_degree))
+            curve.isFixed = True
+            curve2 = sketchTest.sketchCurves.sketchControlPointSplines.add(controlPoints2, int(spline_degree))
+            curve2.isFixed = True
+        else:
+            
+            line1 = "Fusion 360 API only supports degree 3 and 5 splines. Splines up to degree 9 can be drawn manually:"
+            line2 = "- sketch a two point controlpoint spline"
+            line3 = "- go to options to change degree"
+            line4 = "- move the control points to coincidence with the provied control points"
+            
+            ui.messageBox(line1 +"\n" + line2 +"\n" + line3 +"\n" + line4)
        
         lines = sketchTest.sketchCurves.sketchLines
         
