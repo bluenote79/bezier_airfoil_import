@@ -263,9 +263,8 @@ class Foil:
         to_orig = point11.vectorTo(adsk.core.Point3D.create(0,0,0))
 
 
-        for p in range(len(curve.controlPoints)):  #0
-            
-                           
+        for p in range(len(curve.controlPoints)):
+                
             vector_m = adsk.core.Vector3D.create(bezoben[p][0] * wurzeltiefe, bezoben[p][1] * wurzeltiefe, 0.0)  
             point = curve.controlPoints[p]
             vector_p = adsk.core.Vector3D.create(-1 * (point.geometry.x), -1 * (point.geometry.y), 0)
