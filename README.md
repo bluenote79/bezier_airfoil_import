@@ -16,4 +16,4 @@
    - the coincidence shows the script where to put the nose, the second line directs towards the upper side of the airfoil
 2. Start the skript and select the lines.
 3. Click OK
-4. Choose a dat.bez from Bezier Airfoil Designer
+4. Choose a degree 9 dat.bez from Bezier Airfoil Designer
