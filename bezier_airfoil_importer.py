@@ -104,6 +104,9 @@ class Foil:
         line_sehne = sel0.entity
         line_oben = sel1.entity
 
+        line_sehne.isConstruction = True
+        line_oben.isConstruction = True
+
         # detect the orientation of the lines if they don't have coincident constraines
         ss = app.measureManager.measureMinimumDistance(line_sehne.startSketchPoint, line_oben.startSketchPoint).value
         se = app.measureManager.measureMinimumDistance(line_sehne.startSketchPoint, line_oben.endSketchPoint).value
@@ -275,6 +278,8 @@ class Foil:
         if endleiste_soll != 0:
             el = lines.addByTwoPoints(coll[0], coll[-1])
 
+        x_axe.deleteMe()
+        y_axe.deleteMe()
 
 class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def __init__(self):
@@ -303,7 +308,7 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
                                       adsk.core.ValueInput.createByReal(0.0))
 
             inst_text = """ <p><strong>Instructions:</strong></p> \
-                            <p>Create sketch with two coincident lines at right angle.</p> \
+                            <p>Create sketch with two coincident construction lines at right angle.</p> \
                             <p>root line goes from nose to tail, perpendicular line leads to airfoil top.</p> \
                             <p>Select the tail gap size.</p> \
                             <p>Select degree 9 *.bez.dat generated with <a href="https://github.com/marc-frank/BezierAirfoilDesigner">BezierAirfoilDesigner</a> by M. Frank</p>
