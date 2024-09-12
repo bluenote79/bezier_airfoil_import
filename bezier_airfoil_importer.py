@@ -243,7 +243,6 @@ class Foil:
         to_orig = point11.vectorTo(adsk.core.Point3D.create(0, 0, 0))
 
 
-        @staticmethod
         def move_function(curve, data):
 
             for p in range(len(curve.controlPoints)):  # 0
