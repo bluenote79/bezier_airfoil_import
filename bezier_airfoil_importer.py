@@ -267,6 +267,9 @@ class Foil:
         sketchTest.move(coll, midlinerotationMatrix)
         sketchTest.move(coll, transform)
 
+        for point in sketchTest.sketchPoints:
+            point.isFixed = True
+
         # close tail if there is a gap
         lines = sketchTest.sketchCurves.sketchLines
         if endleiste_soll != 0:
