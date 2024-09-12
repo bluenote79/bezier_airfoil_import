@@ -12,6 +12,8 @@ COMMAND_ID = "Airfoil"
 SE01_SELECTION1_COMMAND_ID = "rootline"
 SE02_SELECTION2_COMMAND_ID = "perpendicular line"
 IN01_INPUT1_COMMAND_ID = "tail gap"
+CH01_CHOICE_COMMAND_ID = "set lines to construction"
+CH02_CHOICE_COMMAND_ID = "delete perpendicular line"
 
 _handlers = []
 
@@ -41,9 +43,11 @@ class FoilCommandExecuteHandler(adsk.core.CommandEventHandler):
             input2 = inputs[1]
             sel1 = input2.selection(0)
             input3 = inputs[2]
+            input4 = inputs[3]
+            input5 = inputs[4]
 
             foil = Foil()
-            foil.Execute(sel0, sel1, input3.value)
+            foil.Execute(sel0, sel1, input3.value, input4.value, input5.value)
         except:
             if ui:
                 ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
@@ -62,7 +66,7 @@ class FoilCommandDestroyHandler(adsk.core.CommandEventHandler):
 
 
 class Foil:
-    def Execute(self, sel0, sel1, endleiste_soll):
+    def Execute(self, sel0, sel1, endleiste_soll, cleanup, cleanup2):
 
         def get_profile(filename):
             with open(filename, encoding="utf-8") as a:
@@ -104,8 +108,13 @@ class Foil:
         line_sehne = sel0.entity
         line_oben = sel1.entity
 
-        line_sehne.isConstruction = True
-        line_oben.isConstruction = True
+        if cleanup is True:
+            
+            line_sehne.isConstruction = True
+            line_oben.isConstruction = True
+        
+        else:
+            pass
 
         # detect the orientation of the lines if they don't have coincident constraines
         ss = app.measureManager.measureMinimumDistance(line_sehne.startSketchPoint, line_oben.startSketchPoint).value
@@ -281,6 +290,10 @@ class Foil:
         x_axe.deleteMe()
         y_axe.deleteMe()
 
+        if cleanup2 is True:
+            line_oben.deleteMe()
+
+
 class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def __init__(self):
         super().__init__()
@@ -306,6 +319,8 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i3 = inputs.addValueInput(IN01_INPUT1_COMMAND_ID, IN01_INPUT1_COMMAND_ID, "mm",
                                       adsk.core.ValueInput.createByReal(0.0))
+            i4 = inputs.addBoolValueInput(CH01_CHOICE_COMMAND_ID, CH01_CHOICE_COMMAND_ID, True, "", True)
+            i5 = inputs.addBoolValueInput(CH02_CHOICE_COMMAND_ID, CH02_CHOICE_COMMAND_ID, True, "", False)
 
             inst_text = """ <p><strong>Instructions:</strong></p> \
                             <p>Create sketch with two coincident construction lines at right angle.</p> \
