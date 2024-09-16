@@ -11,9 +11,9 @@ import os
 COMMAND_ID = "Airfoil"
 SE01_SELECTION1_COMMAND_ID = "rootline"
 SE02_SELECTION2_COMMAND_ID = "perpendicular line"
-IN01_INPUT1_COMMAND_ID = "tail gap"
 CH01_CHOICE_COMMAND_ID = "set lines to construction"
-CH02_CHOICE_COMMAND_ID = "delete perpendicular line"
+ST02_INPUT_COMMAND_ID = "suffix"
+ST03_INPUT_COMMAND_ID = "driving dimension"
 
 _handlers = []
 
@@ -48,6 +48,7 @@ class FoilCommandExecuteHandler(adsk.core.CommandEventHandler):
             input4 = inputs[3]
             input5 = inputs[4]
 
+
             foil = Foil()
             foil.Execute(sel0, sel1, input3.value, input4.value, input5.value)
         except:
@@ -68,7 +69,7 @@ class FoilCommandDestroyHandler(adsk.core.CommandEventHandler):
 
 
 class Foil:
-    def Execute(self, sel0, sel1, endleiste_soll, cleanup, cleanup2):
+    def Execute(self, sel0, sel1, cleanup, suf, param_drive):
 
         def get_profile(filename):
             with open(filename, encoding="utf-8") as a:
@@ -178,7 +179,7 @@ class Foil:
 
         sketchTest = line_sehne.parentSketch
         datei = os.path.basename(filename)
-        sketchTest.name = f'{datei}_{round(endleiste_soll * 10, 2)}_mm tail_gap'
+        sketchTest.name = f'{datei}'
 
         pointplus = adsk.core.Point3D.create(1, 1, 0)
         pointminus = adsk.core.Point3D.create(1, -1, 0)
@@ -196,18 +197,7 @@ class Foil:
 
         bezoben, bezunten = get_profile(filename)
 
-        def tail_gap(oben, unten, endleiste_soll):
-
-            half = (endleiste_soll * 0.5) / wurzeltiefe
-
-            oben[0][1] = half
-            unten[-1][1] = -half
-
-            return oben, unten
-
-        bezoben, bezunten = tail_gap(bezoben, bezunten, endleiste_soll)
-
-
+        
         # make sure upper side is oriented towards the side of the vertical line
         if pointminusdist < pointplusdist:
 
@@ -216,9 +206,6 @@ class Foil:
                 bezunten[i][1] = -bezunten[i][1]
         else:
             pass
-
-
-        
 
         def createParam(design, name, value, units, comment):
             userValue = adsk.core.ValueInput.createByReal(value)
@@ -231,7 +218,9 @@ class Foil:
             newParam = design.userParameters.add(name, userValue, units, comment)
             _user_parameters[name] = newParam
 
-        createParam(design, "wurzelfaktor", wurzeltiefe, "mm", "wurzeltiefe")
+
+        wurzelname = "wurzelfaktor" + str(suf)
+        createParam(design, wurzelname, wurzeltiefe, "mm", "wurzeltiefe")
 
         parameters = design.userParameters
 
@@ -302,11 +291,9 @@ class Foil:
         sketchTest.move(coll, midlinerotationMatrix)
         sketchTest.move(coll, transform)
 
-        # close tail if there is a gap
+      
         lines = sketchTest.sketchCurves.sketchLines
-        if endleiste_soll != 0:
-            el = lines.addByTwoPoints(coll[0], coll[-1])
-
+        
         x_axe.deleteMe()
         y_axe.deleteMe()
 
@@ -319,174 +306,142 @@ class Foil:
 
         dim = sketchTest.sketchDimensions
 
-        line1 = lines.addByTwoPoints(coll[0], coll[1])
-        line2 = lines.addByTwoPoints(coll[1], coll[2])
-        line3 = lines.addByTwoPoints(coll[2], coll[3])
-        line4 = lines.addByTwoPoints(coll[3], coll[4])
-        line5 = lines.addByTwoPoints(coll[4], coll[5])
-        line6 = lines.addByTwoPoints(coll[5], coll[6])
-        line7 = lines.addByTwoPoints(coll[6], coll[7])
-        line8 = lines.addByTwoPoints(coll[7], coll[8])
-        line9 = lines.addByTwoPoints(coll[8], coll[9])
-
-        line10 = lines.addByTwoPoints(coll[19], coll[18])
-        line11 = lines.addByTwoPoints(coll[18], coll[17])
-        line12 = lines.addByTwoPoints(coll[17], coll[16])
-        line13 = lines.addByTwoPoints(coll[16], coll[15])
-        line14 = lines.addByTwoPoints(coll[15], coll[14])
-        line15 = lines.addByTwoPoints(coll[14], coll[13])
-        line16 = lines.addByTwoPoints(coll[13], coll[12])
-        line17 = lines.addByTwoPoints(coll[12], coll[11])
-        line18 = lines.addByTwoPoints(coll[11], coll[10])
-
-        line1.isConstruction = True
-        line2.isConstruction = True
-        line3.isConstruction = True
-        line4.isConstruction = True
-        line5.isConstruction = True
-        line6.isConstruction = True
-        line7.isConstruction = True
-        line8.isConstruction = True
-        line9.isConstruction = True
-       
-        line10.isConstruction = True
-        line11.isConstruction = True
-        line12.isConstruction = True
-        line13.isConstruction = True
-        line14.isConstruction = True
-        line15.isConstruction = True
-        line16.isConstruction = True
-        line17.isConstruction = True
-        line18.isConstruction = True
-
-        dim.addAngularDimension(line1, line2, textPoint, True)
-        dim.addAngularDimension(line2, line3, textPoint, True)
-        dim.addAngularDimension(line3, line4, textPoint, True)
-        dim.addAngularDimension(line4, line5, textPoint, True)
-        dim.addAngularDimension(line5, line6, textPoint, True)
-        dim.addAngularDimension(line6, line7, textPoint, True)
-        dim.addAngularDimension(line7, line8, textPoint, True)
-        dim.addAngularDimension(line8, line9, textPoint, True)
-
-        dim.addAngularDimension(line10, line11, textPoint, True)
-        dim.addAngularDimension(line11, line12, textPoint, True)
-        dim.addAngularDimension(line12, line13, textPoint, True)
-        dim.addAngularDimension(line13, line14, textPoint, True)
-        dim.addAngularDimension(line14, line15, textPoint, True)
-        dim.addAngularDimension(line15, line16, textPoint, True)
-        dim.addAngularDimension(line16, line17, textPoint, True)
-        dim.addAngularDimension(line17, line18, textPoint, True)
-
-        createParam(design, "len1p", line1.length, "mm", "")
-        createParam(design, "len2p", line2.length, "mm", "")
-        createParam(design, "len3p", line3.length, "mm", "")
-        createParam(design, "len4p", line4.length, "mm", "")
-        createParam(design, "len5p", line5.length, "mm", "")
-        createParam(design, "len6p", line6.length, "mm", "")
-        createParam(design, "len7p", line7.length, "mm", "")
-        createParam(design, "len8p", line8.length, "mm", "")
-        createParam(design, "len9p", line9.length, "mm", "")
-
-        createParam(design, "len10p", line10.length, "mm", "")
-        createParam(design, "len11p", line11.length, "mm", "")
-        createParam(design, "len12p", line12.length, "mm", "")
-        createParam(design, "len13p", line13.length, "mm", "")
-        createParam(design, "len14p", line14.length, "mm", "")
-        createParam(design, "len15p", line15.length, "mm", "")
-        createParam(design, "len16p", line16.length, "mm", "")
-        createParam(design, "len17p", line17.length, "mm", "")
-        createParam(design, "len18p", line18.length, "mm", "")
-
-        len1v = dim.addDistanceDimension(line1.startSketchPoint, line1.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len2v = dim.addDistanceDimension(line2.startSketchPoint, line2.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len3v = dim.addDistanceDimension(line3.startSketchPoint, line3.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len4v = dim.addDistanceDimension(line4.startSketchPoint, line4.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len5v = dim.addDistanceDimension(line5.startSketchPoint, line5.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len6v = dim.addDistanceDimension(line6.startSketchPoint, line6.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len7v = dim.addDistanceDimension(line7.startSketchPoint, line7.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len8v = dim.addDistanceDimension(line8.startSketchPoint, line8.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len9v = dim.addDistanceDimension(line9.startSketchPoint, line9.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-
-        len10v = dim.addDistanceDimension(line10.startSketchPoint, line10.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len11v = dim.addDistanceDimension(line11.startSketchPoint, line11.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len12v = dim.addDistanceDimension(line12.startSketchPoint, line12.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len13v = dim.addDistanceDimension(line13.startSketchPoint, line13.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len14v = dim.addDistanceDimension(line14.startSketchPoint, line14.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len15v = dim.addDistanceDimension(line15.startSketchPoint, line15.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len16v = dim.addDistanceDimension(line16.startSketchPoint, line16.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len17v = dim.addDistanceDimension(line17.startSketchPoint, line17.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-        len18v = dim.addDistanceDimension(line18.startSketchPoint, line18.endSketchPoint, 0, adsk.core.Point3D.create(0, 0, 0), True)
-
-        createParam(design, "len1p2", len1v.value, "mm", "")
-        createParam(design, "len2p2", len2v.value, "mm", "")
-        createParam(design, "len3p2", len3v.value, "mm", "")
-        createParam(design, "len4p2", len4v.value, "mm", "")
-        createParam(design, "len5p2", len5v.value, "mm", "")
-        createParam(design, "len6p2", len6v.value, "mm", "")
-        createParam(design, "len7p2", len7v.value, "mm", "")
-        createParam(design, "len8p2", len8v.value, "mm", "")
-        createParam(design, "len9p2", len9v.value, "mm", "")
-
-        createParam(design, "len10p2", len10v.value, "mm", "")
-        createParam(design, "len11p2", len11v.value, "mm", "")
-        createParam(design, "len12p2", len12v.value, "mm", "")
-        createParam(design, "len13p2", len13v.value, "mm", "")
-        createParam(design, "len14p2", len14v.value, "mm", "")
-        createParam(design, "len15p2", len15v.value, "mm", "")
-        createParam(design, "len16p2", len16v.value, "mm", "")
-        createParam(design, "len17p2", len17v.value, "mm", "")
-        createParam(design, "len18p2", len18v.value, "mm", "")
-
-
-        _user_parameters['len1p2'].expression = "len1p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len2p2'].expression = "len2p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len3p2'].expression = "len3p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len4p2'].expression = "len4p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len5p2'].expression = "len5p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len6p2'].expression = "len6p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len7p2'].expression = "len7p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len8p2'].expression = "len8p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len9p2'].expression = "len9p * wurzelfaktor * 0,1 / mm"
-
-        _user_parameters['len10p2'].expression = "len10p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len11p2'].expression = "len11p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len12p2'].expression = "len12p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len13p2'].expression = "len13p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len14p2'].expression = "len14p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len15p2'].expression = "len15p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len16p2'].expression = "len16p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len17p2'].expression = "len17p * wurzelfaktor * 0,1 / mm"
-        _user_parameters['len18p2'].expression = "len18p * wurzelfaktor * 0,1 / mm"
-
-        len1v.parameter.expression = "len1p2"
-        len2v.parameter.expression = "len2p2"
-        len3v.parameter.expression = "len3p2"
-        len4v.parameter.expression = "len4p2"
-        len5v.parameter.expression = "len5p2"
-        len6v.parameter.expression = "len6p2"
-        len7v.parameter.expression = "len7p2"
-        len8v.parameter.expression = "len8p2"
-        len9v.parameter.expression = "len9p2"
-
-
         
-        len10v.parameter.expression = "len10p2"
-        len11v.parameter.expression = "len11p2"
-        len12v.parameter.expression = "len12p2"
-        len13v.parameter.expression = "len13p2"
-        len14v.parameter.expression = "len14p2"
-        len15v.parameter.expression = "len15p2"
-        len16v.parameter.expression = "len16p2"
-        len17v.parameter.expression = "len17p2"
-        len18v.parameter.expression = "len18p2"
+        def beschriftung(sketchLine, lr):
+            
+            sx = sketchLine.startSketchPoint.worldGeometry.x
+            sy = sketchLine.startSketchPoint.worldGeometry.y
+            sz = sketchLine.startSketchPoint.worldGeometry.z
 
+            ex = sketchLine.endSketchPoint.worldGeometry.x
+            ey = sketchLine.endSketchPoint.worldGeometry.y
+            ez = sketchLine.endSketchPoint.worldGeometry.z
+            
+            if lr is True:
+                if sx < ex:
+                    ax = sx - 1
+                else:
+                    ax = ex - 1
+                ay = (sy + ey) / 2
+            else:
+                ax = (sx + ex) / 2
+                if sy < ey:
+                    ay = sy - 1
+                else:
+                    ay = ey - 1
+            
+            az = (sz + ez) / 2  
+            
+
+            return adsk.core.Point3D.create(ax, ay, az)     
+        
+
+        def create_l(x1, y1, z1, x2, y2, z2, name):
+            
+            point1 = adsk.core.Point3D.create(x1, y1, z1)
+            point2 = adsk.core.Point3D.create(x2, y2, z2)
+            lines = sketchTest.sketchCurves.sketchLines
+            name = lines.addByTwoPoints(point1, point2)
+            name.isConstruction = True
+
+
+        def create_bem(namex1, namey1, reihe, n):
+            namex = str(namex1) + str(suf)
+            namey = str(namey1) + str(suf)
+            textPoint = beschriftung(line_sehne, False)
+            parx = dim.addOffsetDimension(line_oben, coll[n], textPoint, True).value
+            textPoint = beschriftung(line_sehne, True)
+            pary = dim.addOffsetDimension(line_sehne, coll[n], textPoint, True).value
+            createParam(design, namex, parx, "mm", "")
+            createParam(design, namey, pary, "mm", "")
+            xval = reihe[n][0]
+            yval = reihe[n][1]
+
+            exp1 = str(xval) + '* wurzelfaktor' + str(suf) + ' / mm'
+            exp2 = str(yval) + '* wurzelfaktor' + str(suf) + ' / mm'
+            _user_parameters[namex].expression = exp1
+            _user_parameters[namey].expression = exp2
+            dim[-2].parameter.expression = namex
+            dim[-1].parameter.expression = namey
+
+
+        def create_bem2(namex1, namey1, reihe, n):
+            namex = str(namex1) + str(suf)
+            namey = str(namey1) + str(suf)
+            textPoint = beschriftung(line_sehne, False)
+            parx = dim.addOffsetDimension(line_oben, coll[n+10], textPoint, True).value
+            textPoint = beschriftung(line_sehne, True)
+            pary = dim.addOffsetDimension(line_sehne, coll[n+10], textPoint, True).value
+            createParam(design, namex, parx, "mm", "")
+            createParam(design, namey, pary, "mm", "")
+            xval = reihe[n][0]
+            yval = reihe[n][1]
+
+            exp1 = str(xval) + '*wurzelfaktor' + str(suf) + ' / mm'
+            exp2 = str(yval) + '* -1 * wurzelfaktor' + str(suf) + ' / mm'    ## ggf hier -1 *
+            _user_parameters[namex].expression = exp1
+            _user_parameters[namey].expression = exp2
+            dim[-2].parameter.expression = namex
+            dim[-1].parameter.expression = namey
+
+
+
+        for p in coll:
+            p.isFixed = True
+
+        coll[0].isFixed = False
+        create_bem("xo0", "yo0_endleiste_oben", bezoben, 0)
+        coll[1].isFixed = False
+ 
+        create_bem("xo1", "yo1", bezoben, 1)
+        coll[2].isFixed = False
+        
+        create_bem("xo2", "yo2", bezoben, 2)
+        coll[3].isFixed = False
+        create_bem("xo3", "yo3", bezoben, 3)
+        coll[4].isFixed = False
+        create_bem("xo4", "yo4", bezoben, 4)
+        coll[5].isFixed = False
+        create_bem("xo5", "yo5", bezoben, 5)
+        coll[6].isFixed = False
+        create_bem("xo6", "yo6", bezoben, 6)
+        coll[7].isFixed = False
+        create_bem("xo7", "yo7", bezoben, 7)
+        coll[8].isFixed = False
+        create_bem("xo8", "yo8", bezoben, 8)
+        coll[9].isFixed = False
+        create_bem("xo9", "yo9", bezoben, 9)
+        
+  
         # coll 19 und 0 = endleiste; 10 und 9 Nasenleiste
-        constraints.addCoincident(line9.endSketchPoint, start)
-        constraints.addCoincident(line1.startSketchPoint, ende)
-        constraints.addCoincident(line9.endSketchPoint, line18.endSketchPoint)
-        constraints.addCoincident(line1.startSketchPoint, line10.startSketchPoint)
+        coll[19].isFixed = False
+        create_bem2("xu0", "yu0_endleiste_unten", bezunten, 9)
+        coll[18].isFixed = False
+        create_bem2("xu1", "yu1", bezunten, 8)
+        coll[17].isFixed = False
+        create_bem2("xu2", "yu2", bezunten, 7)
+        coll[16].isFixed = False
+        create_bem2("xu3", "yu3", bezunten, 6)
+        coll[15].isFixed = False
+        create_bem2("xu4", "yu4", bezunten, 5)
+        coll[14].isFixed = False
+        create_bem2("xu5", "yu5", bezunten, 4)
+        coll[13].isFixed = False
+        create_bem2("xu6", "yu6", bezunten, 3)
+        coll[12].isFixed = False
+        create_bem2("xu7", "yu7", bezunten, 2)
+        coll[11].isFixed = False
+        create_bem2("xu8", "yu8", bezunten, 1)
+        coll[10].isFixed = False
+        create_bem2("xu9", "yu9", bezunten, 0)
 
+            
+        if param_drive != "":
 
+       
+            _user_parameters['wurzelfaktor' + str(suf)].expression = param_drive
+
+    
 
 
 
@@ -514,19 +469,23 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             i2 = inputs.addSelectionInput(SE02_SELECTION2_COMMAND_ID, SE02_SELECTION2_COMMAND_ID, "select line")
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
             i2.addSelectionFilter(adsk.core.SelectionCommandInput.SketchLines)
-            i3 = inputs.addValueInput(IN01_INPUT1_COMMAND_ID, IN01_INPUT1_COMMAND_ID, "mm",
-                                      adsk.core.ValueInput.createByReal(0.0))
-            i4 = inputs.addBoolValueInput(CH01_CHOICE_COMMAND_ID, CH01_CHOICE_COMMAND_ID, True, "", True)
-            i5 = inputs.addBoolValueInput(CH02_CHOICE_COMMAND_ID, CH02_CHOICE_COMMAND_ID, True, "", False)
+            i3 = inputs.addBoolValueInput(CH01_CHOICE_COMMAND_ID, CH01_CHOICE_COMMAND_ID, True, "", True)
+            i4 = inputs.addStringValueInput(ST02_INPUT_COMMAND_ID, ST02_INPUT_COMMAND_ID, "suffix")
+            i5 = inputs.addStringValueInput(ST03_INPUT_COMMAND_ID, ST03_INPUT_COMMAND_ID, "")
+
+
+
+
 
             inst_text = """ <p><strong>Instructions:</strong></p> \
                             <p>Create sketch with two coincident construction lines at right angle.</p> \
                             <p>root line goes from nose to tail, perpendicular line leads to airfoil top.</p> \
-                            <p>Select the tail gap size.</p> \
+                            <p>put in a suffix (only letters)</p> \
+                            <p>put in a driving parameter like d1 if you wish</p> \
                             <p>Select degree 9 *.bez.dat generated with <a href="https://github.com/marc-frank/BezierAirfoilDesigner">BezierAirfoilDesigner</a> by M. Frank</p>
                         """
-
-            instructions = inputs.addTextBoxCommandInput('errMessageUniqueID', 'Message', '', 10, True)
+            textinp = "suffix"
+            instructions = inputs.addTextBoxCommandInput('errMessageUniqueID', 'Message', textinp, 10, True)
             instructions.isFullWidth = True
             instructions.formattedText = inst_text
 
