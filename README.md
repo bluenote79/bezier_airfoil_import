@@ -20,6 +20,7 @@
 
 ##Version p2.
 
+
 Different concept using parameters in Fusion:
 3 Options.
 a) Place airfoil selecting two points from a sketch (first at nose, second at tail).
