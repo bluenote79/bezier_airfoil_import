@@ -18,8 +18,6 @@
 3. Click OK
 4. Choose a degree 9 dat.bez from Bezier Airfoil Designer
 
-##Version p2.
-
 
 Different concept using parameters in Fusion:
 3 Options.
