@@ -12,15 +12,15 @@
 
 **Version -p: Different concept using parameters in Fusion:**
 
-a) Place airfoil selecting two points from a sketch (first at nose, second at tail).
-    - optional input of parameter for rootlength.
-    - parameters in fusion for mirroring invx* und invy* under favorites.
-    - * = unique suffix for all parameters nessessary (only letters allowed)
-b) Place airfoil selecting one point (nose).
-    - rotation around point possible
+1. Place airfoil selecting two points from a sketch (first at nose, second at tail).
+- optional input of parameter for rootlength.
+- parameters in fusion for mirroring invx* und invy* under favorites.
+- * = unique suffix for all parameters nessessary (only letters allowed)
+2. Place airfoil selecting one point (nose).
+- rotation around point possible
     - rootlength by parameter input or 100 mm
     - * = unique suffix for all parameters nessessary (only letters allowed)
-c) Zeichnung vom Ursprung der xy-Ebene (kein Punkt).
+3. Zeichnung vom Ursprung der xy-Ebene (kein Punkt).
     - movable in all directions
     - rootlength by parameter input or 100 mm
     - * = unique suffix for all parameters nessessary (only letters allowed)
