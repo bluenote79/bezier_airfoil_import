@@ -19,8 +19,9 @@
 4. Choose a degree 9 dat.bez from Bezier Airfoil Designer
 
 
-Different concept using parameters in Fusion:
-3 Options.
+##Version -p: Different concept using parameters in Fusion:##
+
+You have three options:
 a) Place airfoil selecting two points from a sketch (first at nose, second at tail).
     - optional input of parameter for rootlength.
     - parameters in fusion for mirroring invx* und invy* under favorites.
