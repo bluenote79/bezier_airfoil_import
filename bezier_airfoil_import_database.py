@@ -34,12 +34,18 @@ import adsk.core, adsk.fusion, adsk.cam, traceback
 import sqlite3
 import re
 import os
+import os.path
 
 COMMAND_ID = "Airfoil"
 
-B1_BUTTON = "import"
-B2_BUTTON = "delete"
-D1_DROPDOWN = "Airfoils"
+B1_BUTTON_ID = "import airfoil from file"
+B1_BUTTON_NAME = "import"
+B2_BUTTON_ID = "delete selected airfoil"
+B2_BUTTON_NAME = "delete"
+B3_BUTTON_ID = "import all files from folder"
+B3_BUTTON_NAME = "import"
+D1_DROPDOWN_ID = "Airfoils"
+D1_DROPDOWN_NAME = "Airfoils"
 
 SE01_SELECTION1_COMMAND_ID = "optional points"
 ST02_INPUT_COMMAND_ID = "unique suffix"
@@ -124,10 +130,8 @@ class FoilCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
             inputs = eventArgs.inputs
             cmdInput = eventArgs.input
 
-            # onInputChange for click Button
-            if cmdInput.id == 'import':
-                
-                db = sqlDatabase(DATABASE)
+
+            def get_input_filename():
 
                 dlg = ui.createFileDialog()
                 dlg.title = 'Open bez.dat File'
@@ -136,46 +140,84 @@ class FoilCommandInputChangedHandler(adsk.core.InputChangedEventHandler):
                     return
 
                 filename = dlg.filename
-                                
-                def format_file_path(file_path):
-                    abs_path = os.path.abspath(file_path)
-                    return abs_path
+                return filename
+            
+            def format_file_path(file_path):
+                abs_path = os.path.abspath(file_path)
+                return abs_path
+            
+            def update_dropdown_items():
 
-                formatted_path = format_file_path(filename)
-                db.create_airfoil_table()
-                db.read_airfoil_from_bez(formatted_path)
-    
                 DROPDOWN_ITEMS: adsk.core.ListItems = eventArgs.inputs.itemById('Airfoils').listItems
                 DROPDOWN_ITEMS.clear()
 
                 airfoil_list = db.get_sorted_airfoils()
                
                 for i in range(len(airfoil_list)):
-                    #if airfoil_list[i] != "sqlite_sequence":
-                    DROPDOWN_ITEMS.add(str(airfoil_list[i]), True, '')
-
-
-            if cmdInput.id == 'Airfoils':
-  
-                objectItems = cmdInput.selectedItem
-                foil_id = objectItems.name
-
-            if cmdInput.id == 'delete':
-                
-                db = sqlDatabase(DATABASE)
-                db.create_airfoil_table()
-                db.delete_airfoil(foil_id)
-
-                DROPDOWN_ITEMS: adsk.core.ListItems = eventArgs.inputs.itemById('Airfoils').listItems
-                DROPDOWN_ITEMS.clear()
-                
-                airfoil_list = db.get_sorted_airfoils()
- 
-                for i in range(len(airfoil_list)):
                     DROPDOWN_ITEMS.add(str(airfoil_list[i]), True, '')
                 
                 if len(airfoil_list) == 0:
                     DROPDOWN_ITEMS.classType
+
+            def get_input_path_filelist():
+                                 
+                folderDlg = ui.createFolderDialog()
+                folderDlg.title = 'Choose Folder' 
+                dlgResult = folderDlg.showDialog()
+                if dlgResult == adsk.core.DialogResults.DialogOK:
+                    foldername = folderDlg.folder
+                path_sel = os.path.abspath(foldername)
+                files = os.listdir(path_sel)
+                files_clean = []
+                paths = []
+                for f in files:
+                    if f.endswith("dat") or f.endswith("bez"):
+                        files_clean.append(f)
+                        paths.append(os.path.join(path_sel, f))
+
+                return paths, files_clean
+  
+            # onInputChange for click Button
+            if cmdInput.id == B1_BUTTON_ID:
+                
+                db = sqlDatabase(DATABASE)
+
+                filename = get_input_filename()
+                                               
+                formatted_path = format_file_path(filename)
+                db.create_airfoil_table()
+                db.read_airfoil_from_bez(formatted_path)
+
+                update_dropdown_items()
+    
+            if cmdInput.id == D1_DROPDOWN_ID:
+  
+                objectItems = cmdInput.selectedItem
+                foil_id = objectItems.name
+
+
+            if cmdInput.id == B2_BUTTON_ID:
+                
+                db = sqlDatabase(DATABASE)
+                db.create_airfoil_table()
+                db.delete_airfoil(foil_id)
+                
+                update_dropdown_items()
+                
+
+            if cmdInput.id == B3_BUTTON_ID:
+                
+                file_paths, files = get_input_path_filelist()
+                db = sqlDatabase(DATABASE)
+                db.create_airfoil_table()
+
+
+                for file in file_paths:
+                    formatted_path = format_file_path(file)
+                    db.read_airfoil_from_bez(formatted_path)
+
+                update_dropdown_items()
+                ui.messageBox(f'Imported airfoils: {files}')
 
         except:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
@@ -437,10 +479,11 @@ class FoilCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             tabCmdInput2 = inputs.addTabCommandInput('tab_2', 'Database')
             tab2ChildInputs = tabCmdInput2.children
             
-            tab2ChildInputs.addBoolValueInput(B1_BUTTON, B1_BUTTON, False, "", True)
-            tab2ChildInputs.addBoolValueInput(B2_BUTTON, B2_BUTTON, False, "", True)
+            tab2ChildInputs.addBoolValueInput(B1_BUTTON_ID, B1_BUTTON_NAME, False, "", True)
+            tab2ChildInputs.addBoolValueInput(B2_BUTTON_ID, B2_BUTTON_NAME, False, "", True)
+            tab2ChildInputs.addBoolValueInput(B3_BUTTON_ID, B3_BUTTON_NAME, False, "", True)
 
-            dropdownInput = tab2ChildInputs.addDropDownCommandInput(D1_DROPDOWN, D1_DROPDOWN, adsk.core.DropDownStyles.TextListDropDownStyle)
+            dropdownInput = tab2ChildInputs.addDropDownCommandInput(D1_DROPDOWN_ID, D1_DROPDOWN_NAME, adsk.core.DropDownStyles.TextListDropDownStyle)
             dropdown_items = dropdownInput.listItems
             dropdownInput.maxVisibleItems = 20
             dropdownInput.isFullWidth
